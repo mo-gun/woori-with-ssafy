@@ -1,0 +1,1879 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WON 상속케어 - AI 서비스 프로토타입</title>
+  <style>
+    :root {
+      --blue: #3f82f4;
+      --blue-dark: #2f62d9;
+      --blue-soft: #e8f2ff;
+      --ink: #30363d;
+      --muted: #7f8790;
+      --line: #dce1e7;
+      --bg: #eef4fb;
+      --card: #ffffff;
+      --green: #2f8d6d;
+      --purple: #7968d8;
+      --yellow: #f5c34b;
+      --shadow: 0 18px 44px rgba(33, 45, 65, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(63, 130, 244, 0.18), transparent 34rem),
+        linear-gradient(180deg, #f7fbff 0%, #e8eef6 100%);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      letter-spacing: 0;
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+    }
+
+    .stage {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 0;
+    }
+
+    .phone {
+      width: min(430px, 100vw);
+      min-height: 932px;
+      background: #fff;
+      border-radius: 0;
+      overflow: hidden;
+      box-shadow: none;
+      position: relative;
+    }
+
+    .app {
+      height: 100vh;
+      overflow-y: auto;
+      background: #eff5fc;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(35, 52, 82, 0.7) transparent;
+    }
+
+    .app::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .app::-webkit-scrollbar-thumb {
+      background: rgba(35, 52, 82, 0.7);
+      border-radius: 999px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: #fff;
+      padding: 22px 20px 0;
+      border-bottom: 1px solid #e9edf3;
+    }
+
+    .nav-row {
+      height: 46px;
+      display: grid;
+      grid-template-columns: 44px 1fr 44px;
+      align-items: center;
+    }
+
+    .icon-button {
+      width: 40px;
+      height: 40px;
+      border: 0;
+      border-radius: 14px;
+      background: transparent;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+    }
+
+    .title {
+      margin: 0;
+      text-align: center;
+      font-size: 23px;
+      font-weight: 850;
+      line-height: 1.15;
+    }
+
+    .ai-mark {
+      justify-self: end;
+      width: 34px;
+      height: 34px;
+      border: 3px solid #30363d;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 900;
+      position: relative;
+    }
+
+    .ai-mark::before,
+    .ai-mark::after {
+      content: "";
+      position: absolute;
+      width: 3px;
+      height: 7px;
+      border-radius: 3px;
+      background: #30363d;
+      top: -8px;
+    }
+
+    .ai-mark::before { left: 10px; }
+    .ai-mark::after { right: 10px; }
+
+    .tabs {
+      height: 66px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      align-items: end;
+      gap: 0;
+      margin-top: 8px;
+    }
+
+    .tab {
+      height: 66px;
+      border: 0;
+      background: transparent;
+      color: #888f98;
+      font-size: 21px;
+      font-weight: 800;
+      cursor: pointer;
+      position: relative;
+      white-space: nowrap;
+    }
+
+    .tab.active {
+      color: #30363d;
+    }
+
+    .tab.active::after {
+      content: "";
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 0;
+      height: 3px;
+      border-radius: 3px 3px 0 0;
+      background: #30363d;
+    }
+
+    .hero {
+      min-height: 548px;
+      padding: 54px 20px 28px;
+      background: linear-gradient(180deg, var(--hero-a), var(--hero-b));
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      width: 340px;
+      height: 340px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.13);
+      right: -156px;
+      top: 36px;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 220px;
+      height: 220px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      left: -96px;
+      bottom: 108px;
+    }
+
+    .hero-copy {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero h2 {
+      margin: 0;
+      max-width: 360px;
+      font-size: 31px;
+      line-height: 1.28;
+      color: #fff;
+      font-weight: 900;
+    }
+
+    .hero p {
+      margin: 16px 0 0;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 18px;
+      font-weight: 650;
+      line-height: 1.35;
+    }
+
+    .hero-cards {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 42px;
+    }
+
+    .hero-card {
+      min-height: 190px;
+      padding: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.74);
+      border-radius: 26px;
+      background: rgba(255, 255, 255, 0.26);
+      backdrop-filter: blur(8px);
+      color: var(--ink);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .bubble-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 22px;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      box-shadow: 0 10px 24px rgba(45, 58, 90, 0.14);
+    }
+
+    .hero-card strong {
+      display: block;
+      margin-top: 12px;
+      font-size: 20px;
+      line-height: 1.2;
+      font-weight: 900;
+      color: #272d33;
+    }
+
+    .chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.78);
+      color: #2f62d9;
+      font-size: 12px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .dots {
+      position: relative;
+      z-index: 2;
+      margin-top: 34px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dots span {
+      width: 8px;
+      height: 8px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.58);
+    }
+
+    .dots span:nth-child(2) {
+      width: 24px;
+      background: #fff;
+    }
+
+    .content {
+      background: linear-gradient(180deg, #557ed6 0%, #eff5fc 88%);
+      padding: 0 20px 30px;
+    }
+
+    .section-title {
+      margin: 0 0 16px;
+      padding-top: 36px;
+      color: #fff;
+      font-size: 25px;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .intake-block {
+      padding-top: 32px;
+    }
+
+    .intake-block[hidden] {
+      display: none;
+    }
+
+    .intake-title {
+      margin: 0 0 16px;
+      color: #fff;
+      font-size: 25px;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .intake-card,
+    .analysis-card {
+      background: var(--card);
+      border-radius: 24px;
+      box-shadow: 0 1px 0 rgba(12, 25, 40, 0.04);
+    }
+
+    .intake-card {
+      padding: 22px 20px;
+    }
+
+    .intake-card h3,
+    .analysis-card h3 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.24;
+      font-weight: 900;
+    }
+
+    .intake-card p,
+    .analysis-card p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.38;
+      font-weight: 650;
+    }
+
+    .category-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .category-chip {
+      min-height: 34px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: #2f62d9;
+      font-size: 14px;
+      font-weight: 850;
+    }
+
+    .input-steps {
+      margin-top: 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    .input-step {
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      min-height: 58px;
+      border-bottom: 1px solid #edf1f5;
+    }
+
+    .step-check {
+      width: 24px;
+      height: 24px;
+      border-radius: 99px;
+      background: #3f82f4;
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .step-main strong {
+      display: block;
+      color: #343b43;
+      font-size: 16px;
+      line-height: 1.2;
+      font-weight: 850;
+    }
+
+    .step-main span {
+      display: block;
+      margin-top: 4px;
+      color: #7a828c;
+      font-size: 13px;
+      line-height: 1.2;
+      font-weight: 700;
+    }
+
+    .step-state {
+      padding: 6px 8px;
+      border-radius: 999px;
+      background: #f2f5f8;
+      color: #606a75;
+      font-size: 12px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .analysis-card {
+      margin-top: 14px;
+      padding: 22px 20px;
+    }
+
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .analysis-item {
+      min-height: 76px;
+      border-radius: 18px;
+      background: #f4f7fb;
+      padding: 12px;
+    }
+
+    .analysis-item span {
+      display: block;
+      color: #7c858f;
+      font-size: 12px;
+      line-height: 1.2;
+      font-weight: 750;
+    }
+
+    .analysis-item strong {
+      display: block;
+      margin-top: 8px;
+      color: #252b32;
+      font-size: 19px;
+      line-height: 1.12;
+      font-weight: 900;
+    }
+
+    .analysis-alert {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 18px;
+      background: #fff8dd;
+      border: 1px solid #f0dc94;
+    }
+
+    .analysis-alert strong {
+      display: block;
+      color: #2d3035;
+      font-size: 17px;
+      line-height: 1.25;
+      font-weight: 900;
+    }
+
+    .analysis-alert span {
+      display: block;
+      margin-top: 6px;
+      color: #6f6340;
+      font-size: 13px;
+      line-height: 1.35;
+      font-weight: 750;
+    }
+
+    .product-block {
+      padding-top: 36px;
+    }
+
+    .product-block[hidden] {
+      display: none;
+    }
+
+    .product-title {
+      margin: 0 0 14px;
+      color: #fff;
+      font-size: 23px;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .product-input-card,
+    .product-analysis-card {
+      margin-bottom: 14px;
+      padding: 18px;
+      border-radius: 22px;
+      background: #fff;
+      box-shadow: 0 1px 0 rgba(12, 25, 40, 0.04);
+    }
+
+    .product-input-card h3,
+    .product-analysis-card h3 {
+      margin: 0;
+      color: #30363d;
+      font-size: 19px;
+      line-height: 1.25;
+      font-weight: 900;
+    }
+
+    .product-input-card p,
+    .product-analysis-card p {
+      margin: 7px 0 0;
+      color: #727b86;
+      font-size: 13px;
+      line-height: 1.4;
+      font-weight: 700;
+    }
+
+    .input-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .input-pill {
+      min-height: 64px;
+      padding: 11px;
+      border-radius: 16px;
+      background: #f5f7fa;
+    }
+
+    .input-pill span {
+      display: block;
+      color: #7b838d;
+      font-size: 12px;
+      line-height: 1.2;
+      font-weight: 750;
+    }
+
+    .input-pill strong {
+      display: block;
+      margin-top: 7px;
+      color: #29313a;
+      font-size: 15px;
+      line-height: 1.22;
+      font-weight: 900;
+    }
+
+    .analysis-line {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 16px;
+      background: #eaf3ff;
+      color: #26364f;
+      font-size: 13px;
+      line-height: 1.42;
+      font-weight: 800;
+    }
+
+    .product-card {
+      margin-top: 12px;
+      padding: 18px;
+      border-radius: 22px;
+      background: #fff;
+      box-shadow: 0 1px 0 rgba(12, 25, 40, 0.04);
+    }
+
+    .product-card:first-of-type {
+      margin-top: 0;
+    }
+
+    .product-head {
+      display: grid;
+      grid-template-columns: 54px 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .product-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      background: #f1f6ff;
+    }
+
+    .product-head h3 {
+      margin: 0;
+      color: #30363d;
+      font-size: 18px;
+      line-height: 1.25;
+      font-weight: 900;
+    }
+
+    .product-head p {
+      margin: 4px 0 0;
+      color: #7b838d;
+      font-size: 13px;
+      line-height: 1.3;
+      font-weight: 700;
+    }
+
+    .product-badge {
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: #2f62d9;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .product-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .product-meta div {
+      padding: 11px;
+      border-radius: 16px;
+      background: #f5f7fa;
+    }
+
+    .product-meta span {
+      display: block;
+      color: #7b838d;
+      font-size: 12px;
+      line-height: 1.2;
+      font-weight: 750;
+    }
+
+    .product-meta strong {
+      display: block;
+      margin-top: 6px;
+      color: #272d33;
+      font-size: 16px;
+      line-height: 1.2;
+      font-weight: 900;
+    }
+
+    .product-reason {
+      margin: 12px 0 0;
+      color: #67717c;
+      font-size: 13px;
+      line-height: 1.4;
+      font-weight: 700;
+    }
+
+    .service-card,
+    .metric-card,
+    .share-card {
+      background: var(--card);
+      border-radius: 24px;
+      box-shadow: 0 1px 0 rgba(12, 25, 40, 0.04);
+    }
+
+    .service-card {
+      padding: 24px 20px 18px;
+    }
+
+    .card-heading {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .card-heading h3 {
+      margin: 0;
+      font-size: 23px;
+      font-weight: 900;
+      line-height: 1.25;
+    }
+
+    .card-heading p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      font-weight: 650;
+      line-height: 1.3;
+    }
+
+    .rows {
+      border-top: 1px solid var(--line);
+    }
+
+    .row {
+      min-height: 58px;
+      border: 0;
+      border-bottom: 1px solid #edf1f5;
+      background: transparent;
+      display: grid;
+      grid-template-columns: 1fr 24px;
+      align-items: center;
+      width: 100%;
+      padding: 0;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .row span {
+      font-size: 19px;
+      font-weight: 760;
+      color: #41474e;
+    }
+
+    .metric-card {
+      margin-top: 18px;
+      padding: 22px 20px;
+    }
+
+    .metric-card h3 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.28;
+      font-weight: 900;
+      color: #283039;
+    }
+
+    .metric-copy {
+      margin: 9px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      font-weight: 650;
+      line-height: 1.42;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .metric {
+      min-height: 84px;
+      padding: 13px;
+      border-radius: 18px;
+      background: #f4f7fb;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .metric span {
+      color: #7c858f;
+      font-size: 13px;
+      font-weight: 750;
+      line-height: 1.2;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 21px;
+      line-height: 1.1;
+      font-weight: 900;
+      color: #252b32;
+    }
+
+    .cta {
+      width: 100%;
+      min-height: 56px;
+      margin-top: 18px;
+      border: 0;
+      border-radius: 18px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 19px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(63, 130, 244, 0.22);
+    }
+
+    .notice {
+      margin: 12px 2px 0;
+      color: #7a828c;
+      font-size: 12px;
+      font-weight: 650;
+      line-height: 1.45;
+    }
+
+    .share-title {
+      margin: 36px 0 14px;
+      font-size: 24px;
+      font-weight: 900;
+      color: #30363d;
+    }
+
+    .share-card {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      padding: 18px;
+    }
+
+    .share {
+      border: 0;
+      min-height: 88px;
+      border-radius: 18px;
+      background: #f5f7fa;
+      display: grid;
+      place-items: center;
+      gap: 6px;
+      color: #3b424a;
+      font-size: 15px;
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    .share-dot {
+      width: 34px;
+      height: 34px;
+      border-radius: 99px;
+      display: grid;
+      place-items: center;
+      font-size: 11px;
+      font-weight: 900;
+      color: #fff;
+      background: var(--blue);
+    }
+
+    .share:nth-child(1) .share-dot {
+      background: #ffe031;
+      color: #191919;
+    }
+
+    .share:nth-child(3) .share-dot {
+      background: #8b96a3;
+    }
+
+    .bottom-safe {
+      height: 180px;
+    }
+
+    .sheet {
+      position: absolute;
+      inset: auto 0 0;
+      z-index: 50;
+      padding: 0 18px 18px;
+      transform: translateY(108%);
+      transition: transform 220ms ease;
+      pointer-events: none;
+    }
+
+    .sheet.open {
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .sheet-panel {
+      background: #fff;
+      border-radius: 26px;
+      padding: 16px 18px 20px;
+      box-shadow: 0 -18px 60px rgba(20, 30, 48, 0.22);
+      max-height: 760px;
+      overflow-y: auto;
+    }
+
+    .handle {
+      width: 48px;
+      height: 5px;
+      border-radius: 99px;
+      background: #d6dce4;
+      margin: 0 auto 16px;
+    }
+
+    .sheet h3 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .sheet p {
+      margin: 10px 0 0;
+      color: #747d87;
+      font-size: 15px;
+      font-weight: 650;
+      line-height: 1.45;
+    }
+
+    .chat-log {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .chat-message {
+      max-width: 86%;
+      padding: 12px 14px;
+      border-radius: 18px;
+      font-size: 14px;
+      line-height: 1.45;
+      font-weight: 650;
+    }
+
+    .chat-message.bot {
+      align-self: flex-start;
+      background: #f1f5fa;
+      color: #343b43;
+      border-top-left-radius: 6px;
+    }
+
+    .chat-message.user {
+      align-self: flex-end;
+      background: #3f82f4;
+      color: #fff;
+      border-top-right-radius: 6px;
+    }
+
+    .chat-message.summary {
+      max-width: 100%;
+      align-self: stretch;
+      background: #fff8dd;
+      color: #4b4130;
+      border: 1px solid #f1df9f;
+      border-radius: 16px;
+    }
+
+    .chat-label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 12px;
+      font-weight: 900;
+      opacity: 0.72;
+    }
+
+    .chat-input {
+      display: grid;
+      grid-template-columns: 1fr 54px;
+      gap: 8px;
+      margin-top: 14px;
+      padding: 8px;
+      border-radius: 18px;
+      background: #f3f6fa;
+    }
+
+    .chat-input span {
+      display: flex;
+      align-items: center;
+      min-height: 40px;
+      padding-left: 10px;
+      color: #6f7780;
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .chat-input button {
+      border: 0;
+      border-radius: 14px;
+      background: #3f82f4;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .report-summary {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 18px;
+      background: #eaf3ff;
+      border: 1px solid #cfe1ff;
+      color: #26364f;
+      font-size: 15px;
+      line-height: 1.42;
+      font-weight: 850;
+    }
+
+    .report-section {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 18px;
+      background: #f5f7fa;
+    }
+
+    .report-section h4 {
+      margin: 0;
+      color: #30363d;
+      font-size: 16px;
+      line-height: 1.25;
+      font-weight: 900;
+    }
+
+    .report-section p {
+      margin: 7px 0 0;
+      color: #68727d;
+      font-size: 13px;
+      line-height: 1.42;
+      font-weight: 700;
+    }
+
+    .report-list {
+      display: grid;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .report-item {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 8px;
+      align-items: start;
+    }
+
+    .report-index {
+      width: 24px;
+      height: 24px;
+      border-radius: 99px;
+      display: grid;
+      place-items: center;
+      background: #3f82f4;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .report-item strong {
+      display: block;
+      color: #323941;
+      font-size: 14px;
+      line-height: 1.3;
+      font-weight: 900;
+    }
+
+    .report-detail span {
+      display: block;
+      margin-top: 3px;
+      color: #707982;
+      font-size: 12px;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    .report-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .report-tag {
+      min-height: 28px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: #fff;
+      color: #2f62d9;
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .report-warning {
+      margin-top: 14px;
+      padding: 13px;
+      border-radius: 16px;
+      background: #fff8dd;
+      border: 1px solid #f0dc94;
+      color: #5e5030;
+      font-size: 13px;
+      line-height: 1.42;
+      font-weight: 760;
+    }
+
+    .sheet-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .secondary,
+    .primary {
+      min-height: 48px;
+      border-radius: 16px;
+      border: 0;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .secondary {
+      background: #eef2f7;
+      color: #424a53;
+    }
+
+    .primary {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 24, 36, 0.28);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 180ms ease;
+      z-index: 40;
+    }
+
+    .backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    svg {
+      display: block;
+    }
+
+    @media (max-width: 460px) {
+      .stage {
+        padding: 0;
+      }
+
+      .phone {
+        min-height: 100vh;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      .app {
+        height: 100vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="stage">
+    <section class="phone" aria-label="WON 상속케어 모바일 프로토타입">
+      <div class="app" id="app">
+        <header class="topbar">
+          <div class="nav-row">
+            <button class="icon-button" aria-label="뒤로가기">
+              <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true">
+                <path d="M18.8 6.7 10.5 15l8.3 8.3" fill="none" stroke="#30363d" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <h1 class="title">WON 상속케어</h1>
+            <div class="ai-mark" aria-label="AI">AI</div>
+          </div>
+          <nav class="tabs" aria-label="AI 서비스 탭">
+            <button class="tab active" data-tab="decision">AI판단</button>
+            <button class="tab" data-tab="detect">숨은자산</button>
+            <button class="tab" data-tab="manage">상속관리</button>
+          </nav>
+        </header>
+
+        <section class="hero" id="hero">
+          <div class="hero-copy">
+            <h2 id="heroTitle"></h2>
+            <p id="heroSubtitle"></p>
+          </div>
+          <div class="hero-cards" id="heroCards"></div>
+          <div class="dots" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+        </section>
+
+        <section class="content">
+          <div class="intake-block" id="intakeBlock" hidden></div>
+          <div class="product-block" id="productBlock" hidden></div>
+
+          <h2 class="section-title">서비스 한눈에 보기</h2>
+          <article class="service-card">
+            <div class="card-heading">
+              <div class="bubble-icon" id="mainIcon"></div>
+              <div>
+                <h3 id="serviceTitle"></h3>
+                <p id="serviceDescription"></p>
+              </div>
+            </div>
+            <div class="rows" id="serviceRows"></div>
+          </article>
+
+          <article class="metric-card">
+            <h3 id="resultTitle"></h3>
+            <p class="metric-copy" id="resultCopy"></p>
+            <div class="metrics" id="metrics"></div>
+            <button class="cta" id="cta"></button>
+            <p class="notice" id="notice"></p>
+          </article>
+
+          <div id="extraResultBlock"></div>
+
+          <h2 class="share-title">공유하기</h2>
+          <div class="share-card">
+            <button class="share"><span class="share-dot">TALK</span><span>카카오톡</span></button>
+            <button class="share"><span class="share-dot">···</span><span>문자</span></button>
+            <button class="share"><span class="share-dot">▦</span><span>앱선택</span></button>
+          </div>
+          <div class="bottom-safe"></div>
+        </section>
+      </div>
+
+      <div class="backdrop" id="backdrop"></div>
+      <aside class="sheet" id="sheet" aria-hidden="true">
+        <div class="sheet-panel">
+          <div class="handle"></div>
+          <h3 id="sheetTitle"></h3>
+          <div id="sheetBody"><p id="sheetCopy"></p></div>
+          <div class="sheet-actions">
+            <button class="secondary" id="closeSheet">닫기</button>
+            <button class="primary" id="nextAction">다음</button>
+          </div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const icons = {
+      balance: `
+        <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
+          <rect x="6" y="11" width="32" height="24" rx="7" fill="#e9f2ff"/>
+          <path d="M22 7v30M13 15h18M15 15l-6 12h12l-6-12ZM29 15l-6 12h12l-6-12Z" fill="none" stroke="#3f82f4" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`,
+      shield: `
+        <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
+          <path d="M22 5 35 10v10c0 9-5.4 15.2-13 19-7.6-3.8-13-10-13-19V10l13-5Z" fill="#e8f2ff" stroke="#3f82f4" stroke-width="3"/>
+          <path d="m15 22 5 5 10-11" fill="none" stroke="#2f62d9" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`,
+      search: `
+        <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
+          <circle cx="19" cy="19" r="11" fill="#e7f8f1" stroke="#2f8d6d" stroke-width="3"/>
+          <path d="m27 27 8 8" stroke="#2f8d6d" stroke-width="3.4" stroke-linecap="round"/>
+          <path d="M14 19h10M19 14v10" stroke="#2f8d6d" stroke-width="2.8" stroke-linecap="round"/>
+        </svg>`,
+      coin: `
+        <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
+          <circle cx="22" cy="22" r="15" fill="#fff5cf" stroke="#f5c34b" stroke-width="3"/>
+          <path d="M15 18c1.8-2.4 4.2-3.7 7-3.7 4.3 0 7.4 3.1 7.4 7.7s-3.1 7.7-7.4 7.7c-2.8 0-5.2-1.3-7-3.7" fill="none" stroke="#d99a00" stroke-width="3" stroke-linecap="round"/>
+          <path d="M12 22h14" stroke="#d99a00" stroke-width="2.8" stroke-linecap="round"/>
+        </svg>`,
+      wallet: `
+        <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
+          <rect x="8" y="12" width="29" height="22" rx="7" fill="#e8f2ff" stroke="#3f82f4" stroke-width="3"/>
+          <path d="M12 13 29 8c3-.8 5 1 5 3.7V14" fill="none" stroke="#3f82f4" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="30" cy="23" r="2.6" fill="#2f62d9"/>
+        </svg>`,
+      tax: `
+        <svg width="44" height="44" viewBox="0 0 44 44" aria-hidden="true">
+          <rect x="11" y="7" width="22" height="30" rx="5" fill="#f1edff" stroke="#7968d8" stroke-width="3"/>
+          <path d="M17 16h10M17 23h10M17 30h6" stroke="#7968d8" stroke-width="3" stroke-linecap="round"/>
+          <path d="m28 28 5 5 6-9" fill="none" stroke="#3f82f4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`,
+      arrow: `
+        <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true">
+          <path d="m8 4 7 7-7 7" fill="none" stroke="#7b838d" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>`
+    };
+
+    const screens = {
+      decision: {
+        tab: "AI판단",
+        colors: ["#8170e3", "#5e80df"],
+        heroTitle: "상속 선택이\\n고민될 때",
+        heroSubtitle: "AI가 3개월 안에 필요한 판단을 비교해드려요",
+        heroCards: [
+          { icon: "balance", title: "한정승인", chips: ["#3개월기한", "#채무보호"] },
+          { icon: "shield", title: "상속포기", chips: ["#법률절차", "#위험차단"] }
+        ],
+        mainIcon: "balance",
+        intake: {
+          title: "입력데이터 확인",
+          heading: "안심상속 조회 신청·결과확인 완료",
+          description: "AI 상담 전에 유족이 선택한 상담 카테고리와 첨부된 조회 결과를 먼저 확인해요.",
+          categories: ["상속 의사결정 지원", "한정승인 검토", "상속포기 비교"],
+          steps: [
+            ["상담 카테고리 선택", "한정승인·상속포기 판단", "선택완료"],
+            ["안심상속 조회 신청", "2026.04.12 신청", "완료"],
+            ["안심상속 결과확인", "금융자산·채무 결과 첨부", "확인"],
+            ["추가 입력데이터", "상속인·유언장 입력", "입력완료"]
+          ],
+          analysisTitle: "입력데이터 기반 현재 상황 분석",
+          analysisCopy: "상속 결정은 3개월, 세금 납부는 6개월 기한 기준으로 현재 위험도를 먼저 요약했어요.",
+          analysis: [
+            ["결정기한", "2026.07.11"],
+            ["세금 납부 기한", "2026.10.11"],
+            ["확인 자산", "4,200만원"],
+            ["확인 부채", "3,000만원"]
+          ],
+          recommendationTitle: "한정승인 검토 권장",
+          recommendationCopy: "확인 부채 3,000만원 외에 미확인 채무 가능성이 있어 단순승인보다 한정승인을 먼저 검토하는 흐름이 안전합니다."
+        },
+        serviceTitle: "AI 상속 판단 시뮬레이션",
+        serviceDescription: "조회된 자산과 부채를 바탕으로 선택지별 결과를 비교해요",
+        rows: ["단순승인 결과 보기", "한정승인 결과 보기", "상속포기 결과 보기", "3개월 마감일 확인", "전문가 상담 연결"],
+        resultTitle: "현재는 한정승인을 검토할 상황이에요",
+        resultCopy: "확인된 부채와 미확인 부채 가능성을 함께 반영한 시뮬레이션 결과예요.",
+        metrics: [
+          ["확인 자산", "4,200만원"],
+          ["확인 부채", "3,000만원"],
+          ["미확인 부채 가능성", "25%"],
+          ["남은 결정 기간", "42일"]
+        ],
+        cta: "AI 판단 시작하기",
+        notice: "AI 결과는 법률 자문이 아닌 의사결정 참고 정보입니다.",
+        sheetTitle: "상속 판단 시뮬레이션",
+        sheetCopy: "단순승인, 한정승인, 상속포기의 예상 결과를 자산과 부채 기준으로 비교합니다. 최종 결정 전 전문가 상담을 연결할 수 있어요.",
+        chatTitle: "AI 상속 상담",
+        chat: [
+          ["bot", "입력해주신 안심상속 조회 결과와 추가 입력데이터를 확인했어요. 상속 결정기한은 2026.07.11, 세금 납부 기한은 2026.10.11입니다. 현재 결정기한까지 42일 남았습니다."],
+          ["user", "부채가 더 생길까 봐 걱정돼요."],
+          ["bot", "현재 확인된 자산은 4,200만원, 확인된 부채는 3,000만원입니다. 다만 고인 계좌에서 월 45만원 정기 출금이 반복되는데 대응되는 우리은행 대출 기록이 없어 미확인 채무 가능성을 25%로 보고 있어요."],
+          ["user", "그럼 한정승인이 더 안전한가요?"],
+          ["bot", "단순승인은 확인되지 않은 채무까지 상속될 위험이 있습니다. 한정승인은 상속받은 자산 범위 안에서만 부채를 정리하는 방식이라, 현재 입력데이터 기준으로는 먼저 검토할 선택지입니다."],
+          ["summary", "AI 요약: 한정승인 검토 권장. 다음 단계는 필요서류 확인, 공동상속인 여부 확인, 변호사 상담 연결입니다."]
+        ]
+      },
+      detect: {
+        tab: "숨은자산",
+        colors: ["#35a47d", "#5085d8"],
+        heroTitle: "조회되지 않은\\n돈과 빚이 걱정될 때",
+        heroSubtitle: "AI가 거래 패턴에서 숨은 가능성을 찾아드려요",
+        heroCards: [
+          { icon: "search", title: "숨은 채무", chips: ["#거래패턴", "#정기출금"] },
+          { icon: "coin", title: "가상자산", chips: ["#코인흔적", "#거래소"] }
+        ],
+        mainIcon: "search",
+        serviceTitle: "AI 숨은 채무·자산 분석",
+        serviceDescription: "정기 출금, 현금 인출, 거래소 이체 기록을 분석해요",
+        rows: ["미확인 채무 가능성", "사인 간 채무 의심 거래", "가상자산 거래소 이체 기록", "해외 송금 및 거래소 흔적", "분석 근거 자세히 보기"],
+        resultTitle: "가상자산 보유 가능성이 발견됐어요",
+        resultCopy: "고인의 계좌에서 거래소로 반복 이체된 기록이 확인됐어요.",
+        metrics: [
+          ["업비트 이체 기록", "월 50만원"],
+          ["분석 기간", "2024.03~2026.01"],
+          ["숨은 채무 가능성", "25%"],
+          ["가상자산 가능성", "높음"]
+        ],
+        cta: "AI 분석 결과 보기",
+        notice: "가능성 추정 결과이며, 최종 확인은 해당 기관 절차가 필요합니다.",
+        extraResults: [
+          {
+            title: "개인 간 거래 채무관계가 의심돼요",
+            copy: "고인의 반복 송금, 현금 인출, 거래 메모에서 사인 간 채무 가능성이 보였어요.",
+            metrics: [
+              ["반복 거래 상대", "2명"],
+              ["최근 현금 인출", "850만원"],
+              ["거래 메모", "차용·상환"],
+              ["채무 가능성", "보통"]
+            ],
+            cta: "AI 분석 결과 보기",
+            notice: "개인 간 채무는 조회 결과에 누락될 수 있어 증빙 확인이 필요합니다.",
+            report: {
+              title: "AI 개인 간 채무관계 분석 보고서",
+              summary: "한 줄 요약: 반복 송금 상대 2명, 최근 현금 인출 850만원, 차용·상환 메모가 확인되어 개인 간 채무관계 가능성이 보통 수준으로 추정됩니다.",
+              sections: [
+                {
+                  title: "분석 대상 데이터",
+                  copy: "우리은행 입출금 거래내역, 최근 12개월 반복 송금, 고액 현금 인출, 거래 메모, 수취인명·입금자명 패턴을 함께 비교했습니다.",
+                  items: [
+                    ["반복 송금", "동일 수취인 2명에게 3개월 이상 반복 송금"],
+                    ["현금 인출", "최근 6개월 850만원 현금 인출"],
+                    ["거래 메모", "차용, 갚음, 이자, 정산 유사 키워드 확인"]
+                  ]
+                },
+                {
+                  title: "개인 간 채무 추론 과정",
+                  copy: "공식 금융기관 대출 기록과 연결되지 않는 현금흐름을 찾아 사인 간 채무 가능성을 추정했습니다.",
+                  items: [
+                    ["수취인명 반복", "가족·사업자명이 아닌 개인명으로 일정 금액 반복 송금"],
+                    ["메모 패턴", "상환, 빌림, 정산 등 채무관계 가능성이 있는 표현 발견"],
+                    ["대출기록 불일치", "우리은행 대출 상환 기록과 매칭되지 않는 정기성 지출 확인"]
+                  ]
+                },
+                {
+                  title: "AI 분석 결과 정리",
+                  copy: "확정 채무가 아니라 가능성 신호입니다. 상대방 확인, 문자·계약서·차용증 등 외부 증빙 확인이 필요합니다.",
+                  items: [
+                    ["개인 간 채무 가능성", "보통"],
+                    ["위험 포인트", "안심상속 조회 결과에 누락될 수 있음"],
+                    ["우선 조치", "한정승인 검토와 증빙자료 수집 병행"]
+                  ]
+                },
+                {
+                  title: "챗봇 서비스",
+                  copy: "AI 챗봇에서 개인 간 채무 확인 절차와 한정승인 판단 기준을 대화형으로 확인할 수 있습니다.",
+                  items: [
+                    ["추천 질문", "차용증이 없으면 채무로 인정되나요?"],
+                    ["추천 질문", "개인 간 채무가 의심되면 한정승인이 유리한가요?"],
+                    ["추천 질문", "상대방에게 어떤 증빙을 요청해야 하나요?"]
+                  ]
+                },
+                {
+                  title: "상담 연결",
+                  copy: "사인 간 채무는 법률 판단이 필요한 영역이므로 AI 결과 확인 후 전문가 연결을 제공합니다.",
+                  items: [
+                    ["법률 상담", "한정승인·상속포기와 사인 간 채무 검토"],
+                    ["은행 상담", "거래내역 증빙 출력과 상속 절차 안내"],
+                    ["세무 상담", "채무 인정 여부와 상속세 신고 영향 확인"]
+                  ]
+                },
+                {
+                  title: "확인해야 할 목록",
+                  copy: "보고서 확인 후 다음 항목을 순서대로 점검합니다.",
+                  items: [
+                    ["증빙자료", "차용증, 문자, 카카오톡, 통화기록, 계좌이체 메모"],
+                    ["거래상대", "반복 수취인 2명에게 채권·채무관계 존재 여부 확인"],
+                    ["기한", "상속 결정기한 2026.07.11 이전 한정승인 여부 결정"]
+                  ]
+                }
+              ],
+              tags: ["#개인간채무", "#사인간거래", "#현금인출", "#한정승인검토"],
+              warning: "본 보고서는 금융거래 패턴 기반의 가능성 추정입니다. 개인 간 채무 존재 여부는 증빙자료와 법률 검토를 통해 최종 확인해야 합니다."
+            }
+          }
+        ],
+        sheetTitle: "숨은 채무·자산 분석",
+        sheetCopy: "반복 이체, 대규모 현금 인출, 거래소 입출금 흔적을 근거로 미확인 채무와 디지털 자산 가능성을 보여줍니다.",
+        report: {
+          title: "AI 숨은 채무·자산 분석 보고서",
+          summary: "한 줄 요약: 업비트 입금자명 패턴과 월 50만원 반복 이체가 확인되어 가상자산 보유 가능성이 높고, 미확인 채무 가능성은 25%로 추정됩니다.",
+          sections: [
+            {
+              title: "분석 대상 데이터",
+              copy: "안심상속 조회 결과, 우리은행 입출금 거래내역, 최근 24개월 반복 이체 기록, 고액 현금 인출 기록을 함께 비교했습니다.",
+              items: [
+                ["분석 기간", "2024.03 ~ 2026.01"],
+                ["거래소 이체", "업비트 관련 월 50만원 반복 이체"],
+                ["채무 신호", "월 45만원 정기 출금과 대출 기록 불일치"]
+              ]
+            },
+            {
+              title: "거래소 입금자명 기반 추론",
+              copy: "은행 거래내역의 수취인명·입금자명·메모 표기를 조합해 거래소 가상계좌 이용 흔적을 추론했습니다.",
+              items: [
+                ["입금자명 패턴", "UPBIT_김우리 / 두나무 / 업비트 가상계좌 표기 반복"],
+                ["명의 일치", "고인명과 거래소 입금자명 표기가 일치해 본인 거래 가능성이 높음"],
+                ["반복성", "10개월 이상 동일 금액 이체가 반복되어 단순 일회성 송금 가능성은 낮음"]
+              ]
+            },
+            {
+              title: "AI 분석 결과 정리",
+              copy: "확정 결과가 아니라 가능성 기반의 위험 신호입니다. 최종 잔고 확인은 거래소 상속 절차를 통해 진행해야 합니다.",
+              items: [
+                ["가상자산 가능성", "높음"],
+                ["숨은 채무 가능성", "25%"],
+                ["우선 조치", "거래소 상속 접수와 한정승인 검토 병행"]
+              ]
+            },
+            {
+              title: "챗봇 서비스",
+              copy: "AI 챗봇에서 거래소별 상속 절차, 필요서류, 한정승인 검토 이유를 대화형으로 확인할 수 있습니다.",
+              items: [
+                ["추천 질문", "업비트 상속 절차 알려줘"],
+                ["추천 질문", "숨은 채무가 있으면 한정승인이 유리한가요?"],
+                ["추천 질문", "거래소에 제출할 서류 목록 보여줘"]
+              ]
+            },
+            {
+              title: "상담 연결",
+              copy: "AI 결과만으로 확정 판단하지 않고, 필요 시 우리은행 제휴 전문가로 연결합니다.",
+              items: [
+                ["법률 상담", "한정승인·상속포기 검토"],
+                ["세무 상담", "가상자산 평가와 상속세 신고"],
+                ["은행 상담", "상속 안심 통장과 자금 정리"]
+              ]
+            },
+            {
+              title: "확인해야 할 목록",
+              copy: "보고서 확인 후 다음 항목을 순서대로 점검합니다.",
+              items: [
+                ["거래소", "업비트·빗썸 계정 존재 여부와 잔고 확인"],
+                ["서류", "사망진단서, 가족관계증명서, 기본증명서, 상속인 신분증"],
+                ["기한", "상속 결정기한 2026.07.11 이전 한정승인 여부 결정"]
+              ]
+            }
+          ],
+          tags: ["#거래소입금자명", "#가상자산상속", "#숨은채무", "#한정승인검토"],
+          warning: "본 보고서는 금융거래 패턴 기반의 가능성 추정입니다. 가상자산 보유 여부와 채무 존재 여부는 해당 기관의 상속 확인 절차로 최종 검증해야 합니다."
+        }
+      },
+      manage: {
+        tab: "상속관리",
+        colors: ["#3f82f4", "#5b69d4"],
+        heroTitle: "상속받은 돈을\\n관리해야 할 때",
+        heroSubtitle: "AI가 예적금, 대출, 전문가 연결을 맞춤 추천해드려요",
+        heroCards: [
+          { icon: "wallet", title: "예적금 추천", chips: ["#금리비교", "#우대금리"] },
+          { icon: "tax", title: "대출·전문가", chips: ["#세금준비", "#자산관리"] }
+        ],
+        mainIcon: "wallet",
+        serviceTitle: "AI 상속 맞춤 상품 추천",
+        serviceDescription: "상속인의 자산 규모, 세금 부담, 운용 기간에 맞는 우리은행 상품을 보여줘요",
+        rows: ["예적금 추천 보기", "상속세 납부 대출 보기", "전문자산관리사 연결", "고인 예적금 명의 변경", "상속 안심 계좌 신청"],
+        productInput: {
+          title: "나의 상속 금융정보 입력",
+          description: "필요한 정보를 입력하면 AI가 내 상황을 분석한 뒤 우리은행 상품을 추천해요.",
+          fields: [
+            ["상속 예정 자금", "2억 1,000만원"],
+            ["세금 납부 예정", "6개월 내 필요"],
+            ["운용 기간", "3~12개월"],
+            ["투자 성향", "안정형"],
+            ["우대조건", "급여·자동이체 가능"],
+            ["상담 필요", "세무·자산관리"]
+          ],
+          analysisTitle: "AI 상황 분석",
+          analysisCopy: "세금 납부 전까지는 원금 보전과 유동성이 중요하고, 납부 후 남는 자금은 금리와 우대조건을 비교해 운용하는 흐름이 적합합니다.",
+          line: "분석 결과: 단기 예금·적금 비교 → 세금 납부자금 대출 가능성 확인 → TWO CHAIRS/WM 전문가 상담 순서로 추천합니다."
+        },
+        productsTitle: "추천 가능한 우리은행 상품",
+        products: [
+          {
+            icon: "wallet",
+            title: "고인 예적금 명의 변경 안내",
+            subtitle: "기존 예적금 유지 희망 시",
+            badge: "명의변경",
+            meta: [["유지 가능", "기존 금리·조건"], ["필요", "상속인 동의·서류"]],
+            reason: "해지보다 명의 변경이 유리한 예적금은 기존 금리와 조건을 유지할 수 있는지 먼저 확인해 금융 연속성을 지킵니다."
+          },
+          {
+            icon: "wallet",
+            title: "WON플러스 예금",
+            subtitle: "목돈을 단기 안전 운용할 때",
+            badge: "예금",
+            meta: [["금리", "가입 시점 확인"], ["우대", "비대면·첫거래 확인"]],
+            reason: "세금 납부 전까지 원금 보전이 중요한 상속 자금은 정기예금 중심으로 비교합니다."
+          },
+          {
+            icon: "wallet",
+            title: "WON 적금",
+            subtitle: "남은 자금을 나누어 운용할 때",
+            badge: "적금",
+            meta: [["금리", "가입 시점 확인"], ["우대", "카드·자동이체 조건 확인"]],
+            reason: "상속 자금 일부를 생활비와 분리해 월 단위로 관리하려는 경우 적금 상품을 함께 비교합니다."
+          },
+          {
+            icon: "tax",
+            title: "상속세 납부자금 대출 상담",
+            subtitle: "세금 납부 시점의 현금 부족 대비",
+            badge: "대출",
+            meta: [["용도", "상속세 납부"], ["조건", "심사 후 확인"]],
+            reason: "자산은 있지만 즉시 현금화가 어려운 경우 납부 기한 전에 대출 가능성을 비교합니다."
+          },
+          {
+            icon: "balance",
+            title: "TWO CHAIRS / WM 자문 연결",
+            subtitle: "세무·부동산·자산관리 상담",
+            badge: "전문가",
+            meta: [["대상", "고액·복합 자산"], ["연결", "PB·세무·부동산"]],
+            reason: "상속 자산 규모가 크거나 부동산·금융자산이 섞여 있으면 전문가 상담을 우선 연결합니다."
+          }
+        ],
+        resultTitle: "상속 안심 계좌 신청",
+        resultCopy: "피상속인의 우리은행 자금을 상속 절차용 계좌로 정리할 수 있어요. 맞춤 상품 추천은 계좌 개설 전에도 확인할 수 있습니다.",
+        metrics: [
+          ["우리은행 확인 자금", "2억 1,000만원"],
+          ["신청 방식", "비대면 가능"],
+          ["공동상속인 동의", "필요"],
+          ["추천 연계", "선택 사항"]
+        ],
+        cta: "계좌 신청하기",
+        notice: "상속 안심 계좌는 자금 정리를 위한 선택 흐름이며, 상품 추천 이용 조건은 별도로 확인합니다.",
+        sheetTitle: "상속 안심 계좌 신청",
+        sheetCopy: "피상속인의 우리은행 내 상속 자금을 정리하기 위한 신청 화면입니다. 계좌 신청 후 예적금, 대출, 전문자산관리사 연결을 이어서 확인할 수 있습니다."
+      }
+    };
+
+    const app = document.getElementById("app");
+    const hero = document.getElementById("hero");
+    const heroTitle = document.getElementById("heroTitle");
+    const heroSubtitle = document.getElementById("heroSubtitle");
+    const heroCards = document.getElementById("heroCards");
+    const intakeBlock = document.getElementById("intakeBlock");
+    const productBlock = document.getElementById("productBlock");
+    const mainIcon = document.getElementById("mainIcon");
+    const serviceTitle = document.getElementById("serviceTitle");
+    const serviceDescription = document.getElementById("serviceDescription");
+    const serviceRows = document.getElementById("serviceRows");
+    const resultTitle = document.getElementById("resultTitle");
+    const resultCopy = document.getElementById("resultCopy");
+    const metrics = document.getElementById("metrics");
+    const cta = document.getElementById("cta");
+    const extraResultBlock = document.getElementById("extraResultBlock");
+    const notice = document.getElementById("notice");
+    const sheet = document.getElementById("sheet");
+    const backdrop = document.getElementById("backdrop");
+    const sheetTitle = document.getElementById("sheetTitle");
+    const sheetBody = document.getElementById("sheetBody");
+    const sheetCopy = document.getElementById("sheetCopy");
+    const closeSheet = document.getElementById("closeSheet");
+    const nextAction = document.getElementById("nextAction");
+
+    const initialHash = location.hash.slice(1);
+    const openInitialChat = initialHash === "decision-chat";
+    let current = screens[initialHash] ? initialHash : "decision";
+
+    function render(key) {
+      current = key;
+      const screen = screens[key];
+      hero.style.setProperty("--hero-a", screen.colors[0]);
+      hero.style.setProperty("--hero-b", screen.colors[1]);
+      heroTitle.innerHTML = screen.heroTitle.replace("\\n", "<br>");
+      heroSubtitle.textContent = screen.heroSubtitle;
+      heroCards.innerHTML = screen.heroCards.map(card => `
+        <div class="hero-card">
+          <div>
+            <div class="bubble-icon">${icons[card.icon]}</div>
+            <strong>${card.title}</strong>
+          </div>
+          <div class="chips">${card.chips.map(chip => `<span class="chip">${chip}</span>`).join("")}</div>
+        </div>
+      `).join("");
+      if (screen.intake) {
+        intakeBlock.hidden = false;
+        intakeBlock.innerHTML = `
+          <h2 class="intake-title">${screen.intake.title}</h2>
+          <article class="intake-card">
+            <h3>${screen.intake.heading}</h3>
+            <p>${screen.intake.description}</p>
+            <div class="category-chips">
+              ${screen.intake.categories.map(category => `<span class="category-chip">${category}</span>`).join("")}
+            </div>
+            <div class="input-steps">
+              ${screen.intake.steps.map(([title, detail, state]) => `
+                <div class="input-step">
+                  <span class="step-check">✓</span>
+                  <span class="step-main"><strong>${title}</strong><span>${detail}</span></span>
+                  <span class="step-state">${state}</span>
+                </div>
+              `).join("")}
+            </div>
+          </article>
+          <article class="analysis-card">
+            <h3>${screen.intake.analysisTitle}</h3>
+            <p>${screen.intake.analysisCopy}</p>
+            <div class="analysis-grid">
+              ${screen.intake.analysis.map(([label, value]) => `
+                <div class="analysis-item">
+                  <span>${label}</span>
+                  <strong>${value}</strong>
+                </div>
+              `).join("")}
+            </div>
+            <div class="analysis-alert">
+              <strong>${screen.intake.recommendationTitle}</strong>
+              <span>${screen.intake.recommendationCopy}</span>
+            </div>
+          </article>
+        `;
+      } else {
+        intakeBlock.hidden = true;
+        intakeBlock.innerHTML = "";
+      }
+      mainIcon.innerHTML = icons[screen.mainIcon];
+      serviceTitle.textContent = screen.serviceTitle;
+      serviceDescription.textContent = screen.serviceDescription;
+      serviceRows.innerHTML = screen.rows.map(row => `
+        <button class="row" type="button" data-row="${row}">
+          <span>${row}</span>
+          ${icons.arrow}
+        </button>
+      `).join("");
+      if (screen.products) {
+        productBlock.hidden = false;
+        productBlock.innerHTML = `
+          ${screen.productInput ? `
+            <article class="product-input-card">
+              <h3>${screen.productInput.title}</h3>
+              <p>${screen.productInput.description}</p>
+              <div class="input-grid">
+                ${screen.productInput.fields.map(([label, value]) => `
+                  <div class="input-pill">
+                    <span>${label}</span>
+                    <strong>${value}</strong>
+                  </div>
+                `).join("")}
+              </div>
+            </article>
+            <article class="product-analysis-card">
+              <h3>${screen.productInput.analysisTitle}</h3>
+              <p>${screen.productInput.analysisCopy}</p>
+              <div class="analysis-line">${screen.productInput.line}</div>
+            </article>
+          ` : ""}
+          <h2 class="product-title">${screen.productsTitle}</h2>
+          ${screen.products.map(product => `
+            <article class="product-card">
+              <div class="product-head">
+                <div class="product-icon">${icons[product.icon]}</div>
+                <div>
+                  <h3>${product.title}</h3>
+                  <p>${product.subtitle}</p>
+                </div>
+                <span class="product-badge">${product.badge}</span>
+              </div>
+              <div class="product-meta">
+                ${product.meta.map(([label, value]) => `
+                  <div>
+                    <span>${label}</span>
+                    <strong>${value}</strong>
+                  </div>
+                `).join("")}
+              </div>
+              <p class="product-reason">${product.reason}</p>
+            </article>
+          `).join("")}
+        `;
+      } else {
+        productBlock.hidden = true;
+        productBlock.innerHTML = "";
+      }
+      resultTitle.textContent = screen.resultTitle;
+      resultCopy.textContent = screen.resultCopy;
+      metrics.innerHTML = screen.metrics.map(([label, value]) => `
+        <div class="metric">
+          <span>${label}</span>
+          <strong>${value}</strong>
+        </div>
+      `).join("");
+      cta.textContent = screen.cta;
+      notice.textContent = screen.notice;
+      if (screen.extraResults) {
+        extraResultBlock.innerHTML = screen.extraResults.map((result, index) => `
+          <article class="metric-card">
+            <h3>${result.title}</h3>
+            <p class="metric-copy">${result.copy}</p>
+            <div class="metrics">
+              ${result.metrics.map(([label, value]) => `
+                <div class="metric">
+                  <span>${label}</span>
+                  <strong>${value}</strong>
+                </div>
+              `).join("")}
+            </div>
+            <button class="cta" type="button" data-extra-report="${index}">${result.cta}</button>
+            <p class="notice">${result.notice}</p>
+          </article>
+        `).join("");
+      } else {
+        extraResultBlock.innerHTML = "";
+      }
+      document.querySelectorAll(".tab").forEach(tab => {
+        tab.classList.toggle("active", tab.dataset.tab === key);
+      });
+      app.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function openSheet(title, copy) {
+      sheet.classList.remove("chat");
+      nextAction.textContent = "다음";
+      sheetTitle.textContent = title;
+      sheetBody.innerHTML = `<p id="sheetCopy">${copy}</p>`;
+      sheet.classList.add("open");
+      backdrop.classList.add("open");
+      sheet.setAttribute("aria-hidden", "false");
+    }
+
+    function openChat(screen) {
+      sheet.classList.add("chat");
+      nextAction.textContent = "전문가 연결";
+      sheetTitle.textContent = screen.chatTitle;
+      sheetBody.innerHTML = `
+        <div class="chat-log">
+          ${screen.chat.map(([type, message]) => `
+            <div class="chat-message ${type}">
+              <span class="chat-label">${type === "user" ? "나" : type === "summary" ? "상담 요약" : "WON AI"}</span>
+              ${message}
+            </div>
+          `).join("")}
+        </div>
+        <div class="chat-input">
+          <span>한정승인 서류도 알려줘</span>
+          <button type="button">전송</button>
+        </div>
+      `;
+      sheet.classList.add("open");
+      backdrop.classList.add("open");
+      sheet.setAttribute("aria-hidden", "false");
+    }
+
+    function openReport(report) {
+      sheet.classList.remove("chat");
+      nextAction.textContent = "상담 연결";
+      sheetTitle.textContent = report.title;
+      sheetBody.innerHTML = `
+        <div class="report-summary">${report.summary}</div>
+        ${report.sections.map(section => `
+          <section class="report-section">
+            <h4>${section.title}</h4>
+            <p>${section.copy}</p>
+            <div class="report-list">
+              ${section.items.map(([label, detail], index) => `
+                <div class="report-item">
+                  <span class="report-index">${index + 1}</span>
+                  <div class="report-detail"><strong>${label}</strong><span>${detail}</span></div>
+                </div>
+              `).join("")}
+            </div>
+          </section>
+        `).join("")}
+        <div class="report-tags">
+          ${report.tags.map(tag => `<span class="report-tag">${tag}</span>`).join("")}
+        </div>
+        <div class="report-warning">${report.warning}</div>
+      `;
+      sheet.classList.add("open");
+      backdrop.classList.add("open");
+      sheet.setAttribute("aria-hidden", "false");
+    }
+
+    function close() {
+      sheet.classList.remove("open");
+      backdrop.classList.remove("open");
+      sheet.setAttribute("aria-hidden", "true");
+    }
+
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        history.replaceState(null, "", `#${tab.dataset.tab}`);
+        render(tab.dataset.tab);
+      });
+    });
+
+    cta.addEventListener("click", () => {
+      const screen = screens[current];
+      if (screen.chat) {
+        openChat(screen);
+        return;
+      }
+      if (screen.report) {
+        openReport(screen.report);
+        return;
+      }
+      openSheet(screen.sheetTitle, screen.sheetCopy);
+    });
+
+    serviceRows.addEventListener("click", event => {
+      const row = event.target.closest(".row");
+      if (!row) return;
+      openSheet(row.dataset.row, `${row.dataset.row} 상세 화면으로 이동하기 전 핵심 정보와 필요한 서류를 확인합니다.`);
+    });
+
+    extraResultBlock.addEventListener("click", event => {
+      const button = event.target.closest("[data-extra-report]");
+      if (!button) return;
+      const screen = screens[current];
+      const result = screen.extraResults?.[Number(button.dataset.extraReport)];
+      if (result?.report) openReport(result.report);
+    });
+
+    closeSheet.addEventListener("click", close);
+    backdrop.addEventListener("click", close);
+    nextAction.addEventListener("click", close);
+
+    render(current);
+    if (openInitialChat) {
+      setTimeout(() => openChat(screens.decision), 120);
+    }
+  </script>
+</body>
+</html>
